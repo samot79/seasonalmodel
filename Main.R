@@ -1,9 +1,7 @@
 require("nnet")
 require("MASS")
 require("ggplot2")
-require("plyr")
 require("RColorBrewer")
-require("gdata")
 
 setwd("~/Documents/Kurser/Örebro Universitet/C-Uppsats/Kod/")
 

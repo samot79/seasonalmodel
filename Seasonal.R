@@ -24,7 +24,7 @@ if (normal.sim) {
 } else {
   for (rn in rownames(score)) {
     for (cn in rownames(score)) {
-      before[rn,cn] = apply(ranking,2,function(x)x[rn]>x[cn])
+      before[rn,cn] = mean(apply(ranking,2,function(x)x[rn]>x[cn]))
     }
   }
 }

@@ -3,7 +3,7 @@
 if (!normal.sim) {
 
 # Score är matris var kolumner är simulerade poängfördelningar
-score = matrix(data=0,nrow=16,ncol=1e5)
+score = matrix(data=0,nrow=16,ncol=1e3)
 rownames(score) = teamnames
 for (j in 1:ncol(score)) {
   for (i in 1:nrow(df.pred)) {
