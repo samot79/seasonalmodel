@@ -2,22 +2,28 @@ require("nnet")
 require("MASS")
 require("ggplot2")
 require("RColorBrewer")
+require("xlsx")
 
 setwd("~/Documents/Kurser/Örebro Universitet/C-Uppsats/Kod/")
 
-fname_df = "matchinfo_2014.csv"
-fname_df.pred = "matchinfo_2015_2.csv"
+fname = "SeasonModel2015.xlsx"
 last.year = "2014"
 this.year = "2015"
 
 # Avgör om vi ska använda normalsimulering eller ej.
 normal.sim = T
+normal.nsims = 1e5
+direct.nsims = 1e3
 
 # df innehåller mathinfo för tidigare år. df.pred för det år vi vill göra prediktion på.
-df = read.csv(fname_df, stringsAsFactors=F)
-df.pred = read.csv(fname_df.pred, stringsAsFactors=F)
+df = list()
+outright = list()
+df$Old = read.xlsx(fname, sheetName="LastYearResult")
+df$New = read.xlsx(fname, sheetName="ThisYearResult")
+outright$Old = read.xlsx(fname, sheetName="LastYearOutright")
+outright$New = read.xlsx(fname, sheetName="ThisYearOutright")
 
-# Konverterar matchresultat på formen "A-B" till 1,X eller 2, ex. 1-1 -> X, 3-1 -> 2.
+# Funktion för att konvertera matchresultat på formen "A-B" till 1,X eller 2, ex. 1-1 -> X, 3-1 -> 2.
 conv = function(s) {
   sp = as.numeric(strsplit(as.character(s),"–")[[1]])
   if (length(sp)!=2) return(NA)
@@ -26,57 +32,54 @@ conv = function(s) {
   if (diff == 0) return("X")
   return("2")
 }
+
 # Funktion för att transformera oddsen till en giltig styrkeparameter för regression.
 odds.transform = function(x) -log(x-1)
 
-df$Outcome = factor(sapply(df$Result,conv),levels=c("1","X","2"))
-df.pred$Outcome = factor(sapply(df.pred$Result,conv),levels=c("1","X","2"))
+for (t in c("Old","New")) {
+  df[[t]]$Home = as.vector(df[[t]]$Home)
+  df[[t]]$Away = as.vector(df[[t]]$Away)
+  rownames(outright[[t]]) = outright[[t]]$Name
+  outright[[t]]$Odds = as.numeric(as.vector(outright[[t]]$Odds))
+  outright[[t]]$Name = as.vector(outright[[t]]$Name)
+  for (k in 1:nrow(df[[t]])) {
+    hname = df[[t]][k,"Home"]
+    aname = df[[t]][k,"Away"]
+    df[[t]][k,"OutrightHome"] = outright[[t]][hname,"Odds"]
+    df[[t]][k,"OutrightAway"] = outright[[t]][aname,"Odds"]
+    df[[t]][k,"StrengthHome"] = odds.transform(df[[t]][k,"OutrightHome"])
+    df[[t]][k,"StrengthAway"] = odds.transform(df[[t]][k,"OutrightAway"])
+    df[[t]][k,"StrengthDiff"] = df[[t]][k,"StrengthHome"] - df[[t]][k,"StrengthAway"]
+    df[[t]][k,"Outcome"] = conv(df[[t]][k,"Result"])
+  }
+  df[[t]]$Outcome = factor(df[[t]]$Outcome,levels=c("1","X","2"))
+  
+}
 
-# Lägger in styrkeparametern
-df$StrengthHome = odds.transform(df$OutrightHome)
-df$StrengthAway = odds.transform(df$OutrightAway)
-df$StrengthDiff = df$StrengthHome - df$StrengthAway
-df.pred$StrengthHome = odds.transform(df.pred$OutrightHome)
-df.pred$StrengthAway = odds.transform(df.pred$OutrightAway)
-df.pred$StrengthDiff = df.pred$StrengthHome - df.pred$StrengthAway
-
-### Skattning av matchsannolikheter
-# Olika modeller testas
-reg0 = multinom(Outcome ~ 1, df)
-reg1 = multinom(Outcome ~ StrengthDiff,df)
-reg2 = multinom(Outcome ~ StrengthHome + StrengthAway-1, df)
-reg3 = multinom(Outcome ~ StrengthHome + StrengthAway, df)
-reg4 = polr(Outcome ~ StrengthDiff,df)
-reg5 = polr(Outcome ~ StrengthHome + StrengthAway, df)
-
-reg = reg4
-
-# Skattade matchsannolikheter + odds beräknas.
-est = predict(reg,df,"probs")
-pred = predict(reg,df.pred,"probs")
-df[,c("EstimatedProb_1","EstimatedProb_X","EstimatedProb_2")] = est
-df.pred[,c("EstimatedProb_1","EstimatedProb_X","EstimatedProb_2")] = pred
-df.pred[,c("EstimatedOdds_1","EstimatedOdds_X","EstimatedOdds_2")] = 1/pred
+source("Regression.R")
 
 # Färgtema för grafer.
 col = getPalette = colorRampPalette(brewer.pal(9,"Set1"))(16)
 
-teamnames = unique(df.pred$Home)
+teamnames = unique(df$New$Home)
 
-source("DirectSim.R")
-source("NormalSim.R")
+if (normal.sim) {
+  source("NormalSim.R")
+} else {
+  source("DirectSim.R")
+}
 source("Seasonal.R")
 
-# Density-plot av marginalfördelningar
-p2=ggplot(score.df)+
+# plot av poängfördelningen
+p1=ggplot(score.df)+
   geom_density(aes(Val,color=Team))+
   scale_x_continuous(limits=c(0,90))+
   scale_y_continuous(limits=c(0.00,0.08))+
-  labs(x="score",title=this.year)+
+  labs(x="score",title=paste(this.year,"Simulation"))+
   scale_color_manual(values=col)
 
 # Spridningsdiagram
-p3 = ggplot(df,aes(x=StrengthHome,y=StrengthAway, color=Outcome)) + 
+p2 = ggplot(df$Old,aes(x=StrengthHome,y=StrengthAway, color=Outcome)) + 
       geom_point(shape=1) + 
       scale_color_manual(values=c("1"="#66FF00","X"="#0066CC","2"="#FF3333")) +
       ggtitle(paste("Result",last.year))

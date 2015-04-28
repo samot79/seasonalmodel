@@ -1,7 +1,6 @@
 ### Normal modell:
-if (normal.sim) {
-
 # p[[*]] är matriser som innehåller sannolikheterna för olika matchutfall.
+
 p = list()
 for (x in c("1","X","2")) {
   p[[x]] = matrix(data=0,nrow=16,ncol=16)
@@ -9,12 +8,18 @@ for (x in c("1","X","2")) {
   colnames(p[[x]]) = teamnames
 }
 
-for (i in 1:nrow(df.pred)) {
-  t.h = df.pred[i,"Home"]
-  t.a = df.pred[i, "Away"]
-  p[["1"]][t.h,t.a] = df.pred[i,"EstimatedProb_1"]
-  p[["X"]][t.h,t.a] = df.pred[i,"EstimatedProb_X"]
-  p[["2"]][t.h,t.a] = df.pred[i,"EstimatedProb_2"]
+for (i in 1:nrow(df$New)) {
+  t.h = df$New[i,"Home"]
+  t.a = df$New[i, "Away"]
+  if (is.na(df$New[i,"Outcome"])) {
+    p[["1"]][t.h,t.a] = df$New[i,"EstimatedProb_1"]
+    p[["X"]][t.h,t.a] = df$New[i,"EstimatedProb_X"]
+    p[["2"]][t.h,t.a] = df$New[i,"EstimatedProb_2"]
+  } else {
+    for (res in c("1","X","2")) {
+      p[[res]][t.h,t.a] = df$New[i,"Result"]==res
+    }
+  }
 }
 
 # mu är vektorn av förväntade poäng
@@ -28,7 +33,7 @@ Sigma = Sigma + t(Sigma)
 diag(Sigma) = sigma2
 
 # score:s kolumner är simulerade säsongsresultat
-score = mvrnorm(n=1e6,mu=mu,Sigma=Sigma)
+score = mvrnorm(n=normal.nsims,mu=mu,Sigma=Sigma)
 score = t(score)
 
 score.df = data.frame()
@@ -40,6 +45,4 @@ for (tn in rownames(score)) {
   score.df[k:(k+ncol(score)-1),"Val"] = score[tn,]
   score.df[k:(k+ncol(score)-1),"Team"] = tn
   k = k+ncol(score)
-}
-
 }
