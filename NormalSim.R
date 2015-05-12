@@ -11,15 +11,9 @@ for (x in c("1","X","2")) {
 for (i in 1:nrow(df$New)) {
   t.h = df$New[i,"Home"]
   t.a = df$New[i, "Away"]
-  if (is.na(df$New[i,"Outcome"])) {
-    p[["1"]][t.h,t.a] = df$New[i,"EstimatedProb_1"]
-    p[["X"]][t.h,t.a] = df$New[i,"EstimatedProb_X"]
-    p[["2"]][t.h,t.a] = df$New[i,"EstimatedProb_2"]
-  } else {
-    for (res in c("1","X","2")) {
-      p[[res]][t.h,t.a] = df$New[i,"Result"]==res
-    }
-  }
+  p[["1"]][t.h,t.a] = df$New[i,"EstimatedProb_1"]
+  p[["X"]][t.h,t.a] = df$New[i,"EstimatedProb_X"]
+  p[["2"]][t.h,t.a] = df$New[i,"EstimatedProb_2"]
 }
 
 # mu är vektorn av förväntade poäng

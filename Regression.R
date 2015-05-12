@@ -1,19 +1,24 @@
 ### Skattning av matchsannolikheter
 # Olika modeller testas
 
-#df = df[1:50,]
+# Noll-model, för framtagning av Pseudo-R2.
+reg0 = vglm(Outcome ~ 1,
+            data=df$Old,
+            family=cumulative(parallel=T))
 
-reg0 = multinom(Outcome ~ 1, df$Old)
-reg1 = multinom(Outcome ~ StrengthDiff,df$Old)
-reg2 = multinom(Outcome ~ StrengthHome + StrengthAway-1, df$Old)
-reg3 = multinom(Outcome ~ StrengthHome + StrengthAway, df$Old)
-reg4 = polr(Outcome ~ StrengthDiff,df$Old)
+reg1 = vglm(formula=Outcome ~ StrengthDiff,
+           data=df$Old,
+           family=cumulative(parallel=T))
+# Ickeparallell modell För test av "proportional odds assumption"
+reg2 = vglm(formula=Outcome ~ StrengthDiff,
+            data = df$Old,
+            family=cumulative(parallel=F))
 
-reg = reg4
+reg = reg1
 
-# Skattade matchsannolikheter + odds beräknas.
-est = predict(reg,df$Old,"probs")
-pred = predict(reg,df$New,"probs")
-df$Old[,c("EstimatedProb_1","EstimatedProb_X","EstimatedProb_2")] = est
-df$New[,c("EstimatedProb_1","EstimatedProb_X","EstimatedProb_2")] = pred
+pred = predictvglm(reg,df$New,type="response")
+
 df$New[,c("EstimatedOdds_1","EstimatedOdds_X","EstimatedOdds_2")] = 1/pred
+df$New[,c("EstimatedProb_1", "EstimatedProb_X","EstimatedProb_2")] = pred
+
+df$Reduced = df$New[,c("Home","Away","Outcome","EstimatedOdds_1","EstimatedOdds_X","EstimatedOdds_2")]

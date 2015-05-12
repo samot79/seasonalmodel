@@ -8,6 +8,11 @@ for (k in 1:ncol(score)) {
   ranking[,k] = 17-rank(score[,k],ties.method="random")
 }
 
+winner = c()
+for (rn in rownames(ranking)) {
+  winner[rn] = 1/mean(ranking[rn,]==1)
+}
+
 # before: matris som innehåller sannolikheten att ett visst lag kommer före ett annat.
 # kan beräknas exakt (utan simulering) vid normalapproximation.
 before = matrix(nrow=16,ncol=16)
