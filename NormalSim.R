@@ -27,16 +27,15 @@ Sigma = Sigma + t(Sigma)
 diag(Sigma) = sigma2
 
 # score:s kolumner är simulerade säsongsresultat
-score = mvrnorm(n=normal.nsims,mu=mu,Sigma=Sigma)
-score = t(score)
+#score = mvrnorm(n=normal.nsims,mu=mu,Sigma=Sigma)
+#score = t(score)
 
-score.df = data.frame()
-score.df$Team = character()
-score.df$Val = numeric()
-
-k = 1
-for (tn in rownames(score)) {
-  score.df[k:(k+ncol(score)-1),"Val"] = score[tn,]
-  score.df[k:(k+ncol(score)-1),"Team"] = tn
-  k = k+ncol(score)
-}
+# Sampling ur multivariat normal
+N = length(mu)
+es = eigen(Sigma)
+U = es$vectors
+D = diag(es$values)
+A = U%*%sqrt(D)
+score = matrix(data=rnorm(n=N*normal.nsims),nrow=N,ncol=normal.nsims)
+score = mu + A%*%score
+rownames(score)  = names(mu)

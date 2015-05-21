@@ -1,17 +1,9 @@
 ### Outrightberäkning
 ## Modellering av Outrightodds. Simulering samt normalapproximation testas.
 
-ranking = matrix(0,nrow=16,ncol=ncol(score))
-rownames(ranking) = rownames(score)
+ranking = apply(score,2,function(x)17-rank(x,ties.method="random"))
 
-for (k in 1:ncol(score)) {
-  ranking[,k] = 17-rank(score[,k],ties.method="random")
-}
-
-winner = c()
-for (rn in rownames(ranking)) {
-  winner[rn] = 1/mean(ranking[rn,]==1)
-}
+winner = 1/apply(ranking,1,function(x)mean(x==1))
 
 # before: matris som innehåller sannolikheten att ett visst lag kommer före ett annat.
 # kan beräknas exakt (utan simulering) vid normalapproximation.
@@ -29,7 +21,7 @@ if (normal.sim) {
 } else {
   for (rn in rownames(score)) {
     for (cn in rownames(score)) {
-      before[rn,cn] = mean(apply(ranking,2,function(x)x[rn]>x[cn]))
+      before[rn,cn] = mean(apply(ranking,2,function(x)x[rn]<x[cn]))
     }
   }
 }
@@ -40,8 +32,6 @@ rownames(ranking.prob) = rownames(ranking)
 for (rn in rownames(ranking.prob)) {
   for (j in 1:16) ranking.prob[rn,j] = mean(ranking[rn,]==j)
 }
-
-maxrank = apply(ranking.prob,1,which.max)
 
 if (this.year == "2015") {
   # best-in-region-odds
@@ -55,10 +45,7 @@ if (this.year == "2015") {
     best[[n]] = 1/sapply(1:length(region[[n]]),function(x)mean(x==y))
     names(best[[n]]) = region[[n]]
   }
-  
-  without.malmo = apply(apply(ranking[2:nrow(ranking),],2,rank)==1,1,mean)
+  without.malmo = apply(apply(ranking,2,function(x)(x==1 & x["MFF"]!=1) | (x==2 & x["MFF"]==1)),1,mean)
 }
 
-
-relegated =  1/apply(apply(ranking,2,function(x)x %in% c(15,16)),1,mean)
-names(relegated) = rownames(ranking)
+relegated =  1/apply(apply(ranking,2,function(x)x == 15 | x==16),1,mean)
