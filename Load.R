@@ -6,7 +6,7 @@ require("VGAM")
 ROOT = "/home/william/Dropbox/Kurser/Örebro Universitet/C-Uppsats/Kod"
 
 setwd(ROOT)
-fname = "SeasonModel2015_2.xlsx"
+fname = "SeasonModel2015.xlsx"
 last.year = "2014"
 this.year = "2015"
 
@@ -46,5 +46,3 @@ edit.result = function() {df$New[,c("Home","Away","Outcome")] <<- edit(df$New[,c
 
 df$Old$Outcome = ordered(factor(sapply(df$Old$Result,conv),levels=c("1","X","2")))
 df$New$Outcome = ordered(factor(sapply(df$New$Result,conv),levels=c("1","X","2")))
-
-source("Main.R")

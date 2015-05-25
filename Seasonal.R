@@ -49,3 +49,7 @@ if (this.year == "2015") {
 }
 
 relegated =  1/apply(apply(ranking,2,function(x)x == 15 | x==16),1,mean)
+
+top3 = rowMeans(apply(ranking,2,function(x)x<=3))
+
+kval = 1/rowMeans(ranking==14)

@@ -25,12 +25,10 @@ df$New$StrengthAway = odds.transform(df$New$OutrightAway)
 df$New$StrengthDiff = df$New$StrengthHome - df$New$StrengthAway
 
 # Avgör om vi ska använda normalsimulering eller ej.
-normal.sim = T
+normal.sim = F
 
 normal.nsims = 1e5
-direct.nsims = 1e4
-
-# Funktion för att sätta ny outright
+direct.nsims = 1e5
 
 source("Regression.R")
 

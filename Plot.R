@@ -10,7 +10,7 @@ for (tn in rownames(score)) {
   k = k+ncol(score)
 }
 
-
+score.df$Team = factor(score.df$Team,levels=names(sort(mu)))
 
 score.df$Lag = score.df$Team
 # plot av poängfördelningen
@@ -19,7 +19,7 @@ p1=ggplot(score.df)+
   scale_x_continuous(limits=c(0,90))+
   scale_y_continuous(limits=c(0.00,0.08))+
   labs(x="Poäng",y="Täthet",title=paste("Simulering",this.year))+
-  scale_color_manual(values=col)+
+  scale_color_manual(values=col[c(1,8,15,6,13,4,11,2,9,16,7,14,5,12,3,10)])+
   theme(plot.title = element_text(size = rel(2)))+
   theme(axis.title.x = element_text(size = rel(2)))+
   theme(axis.title.y = element_text(size = rel(2)))+
